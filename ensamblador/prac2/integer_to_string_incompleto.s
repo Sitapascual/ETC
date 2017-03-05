@@ -24,7 +24,7 @@ B0_3:   blez	$t1, B0_7		# si i <= 0 salta el bucle
 B0_7:	sb	$zero, 0($t0)		# *p = '\0'
 B0_10:	jr	$ra
 
-integer_to_string:
+
 integer_to_string_v1:           	# ($a0, $a1, $a2) = (n, base, buf)
 	 move    $t0, $a2		# char *p = buff
 	# for (int i = n; i > 0; i = i / base) {
@@ -54,10 +54,39 @@ fin_for:
 
 B1_10:	jr	$ra
 
+integer_to_string:
 integer_to_string_v2:           	# ($a0, $a1, $a2) = (n, base, buf)
-	# TODO
-        break
-        jr	$ra
+	move    $t0, $a2		# char *p = buff
+	# for (int i = n; i > 0; i = i / base) {
+	bltz	$a0, conver		#Comprobar que a0 es menor que 0
+conver: abs	$t1, $a0		# int i = n	
+B2_3:   blez	$t1, B2_7		# si i <= 0 salta el bucle
+	div	$t1, $a1		# i / base
+	mflo	$t1			# i = i / base, el contenido de lo a t1
+	mfhi	$t2			# d = i % base
+	addiu	$t2, $t2, '0'		# d + '0'
+	sb	$t2, 0($t0)		# *p = $t2 
+	addiu	$t0, $t0, 1		# ++p
+	j	B2_3			# sigue el bucle
+        # }
+        bltz	$a0, B2_7
+	addi	$t0, $t0, '-'
+B2_7:	sb	$zero, 0($t0)		# *p = '\0'
+	#Añadido en clase
+	addi	$t0, $t0, -1		
+for2:	bge	$a2, $t0, fin_for2
+	lb	$t3, 0($a2)	#leer
+	lb	$t4, 0($t0)
+	sb	$t4, 0($a2)	#escribir
+	sb	$t3, 0($t0)
+	addi	$a2, $a2, 1
+	addi	$t0, $t0, -1
+	j	for2
+fin_for2:
+
+
+B2_10:	jr	$ra
+
 
 integer_to_string_v3:
 	# TODO
