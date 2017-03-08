@@ -54,12 +54,16 @@ fin_for:
 
 B1_10:	jr	$ra
 
-integer_to_string:
+
 integer_to_string_v2:           	# ($a0, $a1, $a2) = (n, base, buf)
 	move    $t0, $a2		# char *p = buff
 	# for (int i = n; i > 0; i = i / base) {
-	bltz	$a0, conver		#Comprobar que a0 es menor que 0
-conver: abs	$t1, $a0		# int i = n	
+	bltz	$a0, convert		#Comprobar que a0 es menor que 0
+					#Si es mayor que cero continuamos
+	move	$t1, $a0		#Copio el valor de $a0 en $t0
+	j	B2_3			#Si es mayor que cero vamos a B2_3
+	
+convert:abs	$t1, $a0		#Valor absoluto a t1 ya que es menor que 1
 B2_3:   blez	$t1, B2_7		# si i <= 0 salta el bucle
 	div	$t1, $a1		# i / base
 	mflo	$t1			# i = i / base, el contenido de lo a t1
@@ -69,9 +73,11 @@ B2_3:   blez	$t1, B2_7		# si i <= 0 salta el bucle
 	addiu	$t0, $t0, 1		# ++p
 	j	B2_3			# sigue el bucle
         # }
-        bltz	$a0, B2_7
-	addi	$t0, $t0, '-'
-B2_7:	sb	$zero, 0($t0)		# *p = '\0'
+B2_7:   bgez	$a0, fin_if		#Si a0 es mayor o igual que cero entonces vamos al fin_if
+	li	$t3, '-'		#Si es menor que cero entonces le añadimos el '-'
+	sb	$t3, 0($t0)		#Guardamos el $t3 en la posicion 0($t0)
+	addi	$t0, $t0, 1
+fin_if:	sb	$zero, 0($t0)		# *p = '\0'
 	#Añadido en clase
 	addi	$t0, $t0, -1		
 for2:	bge	$a2, $t0, fin_for2
@@ -87,11 +93,52 @@ fin_for2:
 
 B2_10:	jr	$ra
 
-
+integer_to_string:
 integer_to_string_v3:
-	# TODO
-        break
-        jr	$ra
+	move    $t0, $a2		# char *p = buff
+	# for (int i = n; i > 0; i = i / base) {
+	beqz	$a0, cero		#Comprobar que a0 es igual a 0
+	bltz	$a0, convert3		#Comprobar que a0 es menor que 0
+					#Si es mayor que cero continuamos
+	move	$t1, $a0		#Copio el valor de $a0 en $t0
+	j	B3_3			#Si es mayor que cero vamos a B2_3
+	
+convert3:abs	$t1, $a0		#Valor absoluto a t1 ya que es menor que 1
+B3_3:   blez	$t1, B3_7		# si i <= 0 salta el bucle
+	div	$t1, $a1		# i / base
+	mflo	$t1			# i = i / base, el contenido de lo a t1
+	mfhi	$t2			# d = i % base
+	addiu	$t2, $t2, '0'		# d + '0'
+	sb	$t2, 0($t0)		# *p = $t2 
+	addiu	$t0, $t0, 1		# ++p
+	j	B3_3			# sigue el bucle
+        # }
+
+B3_7:   bgez	$a0, fin_if3		#Si a0 es mayor o igual que cero entonces vamos al fin_if
+	li	$t3, '-'		#Si es menor que cero entonces le añadimos el '-'
+	sb	$t3, 0($t0)		#Guardamos el $t3 en la posicion 0($t0)
+	addi	$t0, $t0, 1
+fin_if3:sb	$zero, 0($t0)		# *p = '\0'
+
+	#Añadido en clase
+	addi	$t0, $t0, -1		
+for3:	bge	$a2, $t0, fin_for3
+	lb	$t3, 0($a2)	#leer
+	lb	$t4, 0($t0)
+	sb	$t4, 0($a2)	#escribir
+	sb	$t3, 0($t0)
+	addi	$a2, $a2, 1
+	addi	$t0, $t0, -1
+	j	for3
+cero:	
+li	$t3, '0'
+sb	$t3, 0($t0)
+addi	$t0, $t0, 1
+sb	$zero, 0($t0)	
+fin_for3:
+
+
+B3_10:	jr	$ra
 
 integer_to_string_v4:			# ($a0, $a1, $a2) = (n, base, buf)
 	# TODO
