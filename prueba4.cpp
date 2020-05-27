@@ -3,15 +3,28 @@
 #include <iomanip>
 using namespace std;
 class nodo{
+    private:
+        nodo *izq, *der;
+        int dato;
+        int altura;
     public:
-    int dato;
-    nodo *izq, *der;
-    int altura;
-    nodo* crearNodo(int x);
-    void insertar(int x);
-    void insertarDos(nodo* &a, int x);
-    void verArbol(nodo* arbol, int n);
-    int alt(nodo* a);
+        
+        
+        
+        nodo* crearNodo(int x);
+        void insertar(int x);
+        void insertarDos(nodo* &a, int x);
+        void verArbol(nodo* arbol, int n);
+        int alt(nodo* a);
+        nodo* getNodoIzq();
+        nodo* getNodoDer();
+        int getDato();
+        int getAltura();
+        void buscar(int min, int max);
+        void buscarDos(nodo* &hoja, int min, int max);
+        void RSI(nodo* &a);
+        void RSD(nodo* &a);
+        
 };
 
 class Arbol{
@@ -21,6 +34,7 @@ class Arbol{
         nodo* getRaiz();        
         void insertarRaiz(nodo* &a);
         Arbol();
+        nodo* cambiarRaiz(nodo* &a);
 };
 
 Arbol::Arbol(){
@@ -44,6 +58,23 @@ nodo* Arbol::getRaiz(){
     return raiz;
 }  
 
+nodo* Arbol::cambiarRaiz(nodo* &a){
+    raiz = a;
+}
+
+nodo* nodo::getNodoIzq(){
+    return izq;
+}
+
+nodo* nodo::getNodoDer(){
+    return der;
+}
+
+
+int nodo::getDato(){
+    return dato;
+}
+
 int nodo::alt(nodo* a){
     if(a == NULL){
         return -1;
@@ -51,7 +82,25 @@ int nodo::alt(nodo* a){
     else{
         return a -> altura;
     }
-} 
+}
+
+void nodo::RSI(nodo* &a){
+    nodo *b = a -> getNodoIzq();
+    a->izq = b -> getNodoDer();
+    b -> der = a;
+    a -> altura = 1 + max(alt(a -> izq), alt(a -> der));
+    b -> altura = 1 + max(alt(b -> izq), a -> altura);
+    a = b;
+}
+
+void nodo::RSD(nodo* &a){
+    nodo *b = a -> getNodoDer();
+    a->der = b -> getNodoIzq();
+    b -> izq = a;
+    a -> altura = 1 + max(alt(a -> izq), alt(a -> der));
+    b -> altura = 1 + max(alt(b -> izq), a -> altura);
+    a = b;
+}
 
 void nodo::insertarDos(nodo* &a, int x){
      if(a==NULL){
@@ -72,33 +121,68 @@ void nodo::insertarDos(nodo* &a, int x){
 
 void Arbol::insertarRaiz(nodo* &a){
     cout << "Asignado";
-    raiz = a;
-    
+    raiz = a;    
 }
+
+
 
 void nodo::insertar(int x){
     cout << "1" << endl;
     if(arbol.getRaiz() == NULL){
-
         nodo *nuevo = crearNodo(x);
         cout << "Insertado1: " << nuevo -> dato << endl;
         arbol.insertarRaiz(nuevo);
         cout << "Insertado2" << endl;
     }
+    //Subarbol izquierdo
     else if(x < arbol.getRaiz() -> dato){
           insertarDos(arbol.getRaiz() ->izq, x);
+          if (alt(arbol.getRaiz() ->izq) - alt(arbol.getRaiz() ->der) > 1){
+            if (x < arbol.getRaiz() ->izq -> dato){
+                nodo *nuevo = arbol.getRaiz();
+                RSI(nuevo);
+                arbol.cambiarRaiz(nuevo);                
+                cout << "RSI" << endl;
+            }
+            else{
+                cout << "RDI" << endl;
+                RSD(arbol.getRaiz() -> izq);
+                nodo *nuevo = arbol.getRaiz();
+                RSI(nuevo);
+                arbol.cambiarRaiz(nuevo);     
+            }
+              
+          }
+          
+          
           arbol.getRaiz() -> altura = 1 + max(alt(arbol.getRaiz() -> izq), alt(arbol.getRaiz() -> der));
           cout << arbol.getRaiz() -> altura << endl;
           
      }
+     //Subarbol derecho
      else if(x > arbol.getRaiz() -> dato){
-          insertarDos(arbol.getRaiz() -> der, x);
-          arbol.getRaiz() -> altura = 1 + max(alt(arbol.getRaiz() -> izq), alt(arbol.getRaiz() -> der));
-          cout << arbol.getRaiz() -> altura << endl;
+        insertarDos(arbol.getRaiz() -> der, x);
+        if (alt(arbol.getRaiz() ->der) - alt(arbol.getRaiz() ->izq) > 1){
+            if (x > arbol.getRaiz() ->der -> dato){
+                nodo *nuevo = arbol.getRaiz();
+                RSD(nuevo);
+                arbol.cambiarRaiz(nuevo); 
+                cout << "RSD" << endl;
+            }
+            else{
+                cout << "RDD" << endl;
+                //
+            }
+        }
+        else{
+            arbol.getRaiz() -> altura = 1 + max(alt(arbol.getRaiz() -> izq), alt(arbol.getRaiz() -> der));
+            cout << arbol.getRaiz() -> altura << endl;
+        }
+          
      }
 }
 
-void buscarDos(nodo* &hoja, int min, int max){
+void nodo::buscarDos(nodo* &hoja, int min, int max){
     if(hoja != NULL){
         if(hoja -> dato == min || hoja -> dato == max){
             cout << hoja -> dato << endl;
@@ -119,39 +203,39 @@ void buscarDos(nodo* &hoja, int min, int max){
     }
 }
 
-/*
-void buscar(int min, int max){
-    if(arbol != NULL){
-        if(arbol -> dato == min || arbol -> dato == max){
-            cout << arbol -> dato << endl;
-            buscarDos(arbol ->izq, min, max);
-            buscarDos(arbol ->der, min, max);
+
+void nodo::buscar(int min, int max){
+    if(arbol.getRaiz() != NULL){
+        if(arbol.getRaiz() -> dato == min || arbol.getRaiz() -> dato == max){
+            cout << arbol.getRaiz() -> dato << endl;
+            buscarDos(arbol.getRaiz() ->izq, min, max);
+            buscarDos(arbol.getRaiz() ->der, min, max);
         }
-        else if(arbol -> dato > min && arbol -> dato < max){
-            cout << arbol -> dato << endl;
-            buscarDos(arbol ->izq, min, max);
-            buscarDos(arbol ->der, min, max);
+        else if(arbol.getRaiz() -> dato > min && arbol.getRaiz() -> dato < max){
+            cout << arbol.getRaiz() -> dato << endl;
+            buscarDos(arbol.getRaiz() ->izq, min, max);
+            buscarDos(arbol.getRaiz() ->der, min, max);
         }
-        else if(arbol -> dato < min){
-            buscarDos(arbol ->der, min, max);
+        else if(arbol.getRaiz() -> dato < min){
+            buscarDos(arbol.getRaiz() ->der, min, max);
         }
-        else if(arbol -> dato > max){
-            buscarDos(arbol ->izq, min, max);
+        else if(arbol.getRaiz() -> dato > max){
+            buscarDos(arbol.getRaiz() ->izq, min, max);
         }
     }
     else{
         cout << "Arbol vacio" << endl;
     }
-}*/
+}
 
 
 void preOrden(nodo* arbol)
 {
      if(arbol!=NULL)
      {
-          cout << arbol->dato <<" ";
-          preOrden(arbol->izq);
-          preOrden(arbol->der);
+          cout << arbol->getDato() <<" ";
+          preOrden(arbol->getNodoIzq());
+          preOrden(arbol->getNodoDer());
      }
 }
 
@@ -159,9 +243,9 @@ void enOrden(nodo* arbol)
 {
      if(arbol!=NULL)
      {
-          enOrden(arbol->izq);
-          cout << arbol->dato << " ";
-          enOrden(arbol->der);
+          enOrden(arbol->getNodoIzq());
+          cout << arbol->getDato() << " ";
+          enOrden(arbol->getNodoDer());
      }
 }
 
@@ -169,9 +253,9 @@ void postOrden(nodo* arbol)
 {
      if(arbol!=NULL)
      {
-          postOrden(arbol->izq);
-          postOrden(arbol->der);
-          cout << arbol->dato << " ";
+          postOrden(arbol->getNodoIzq());
+          postOrden(arbol->getNodoDer());
+          cout << arbol->getDato() << " ";
      }
 }
 
@@ -216,11 +300,11 @@ int main()
 
     cout << "\n Mostrando ABB \n\n";
     t -> verArbol( arbol.getRaiz(), 0);
-    int min = 9;
+    int min = 8;
     int max = 12;
 
     cout << "BUSQUEDA" << endl;
-    //buscar(min, max);
+    t -> buscar(min, max);
     cout << "\n Recorridos del ABB";
 
     cout << "\n\n En orden   :  ";   enOrden(arbol.getRaiz());
